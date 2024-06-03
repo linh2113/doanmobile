@@ -23,15 +23,14 @@ public class DBHelper extends SQLiteOpenHelper {
         String CREATE_USERS_TABLE = "CREATE TABLE " + TABLE_USERS + "("
                 + COLUMN_USERNAME + " TEXT PRIMARY KEY,"
                 + COLUMN_PASSWORD + " TEXT,"
-                + COLUMN_AVATAR + " TEXT" + ")"; // Thêm cột avatar
+                + COLUMN_AVATAR + " TEXT" + ")";
         db.execSQL(CREATE_USERS_TABLE);
 
-        // Thêm dữ liệu mẫu với COLUMN_AVATAR
+        // Thêm dữ liệu mẫu
         String INSERT_SAMPLE_USER = "INSERT INTO " + TABLE_USERS + "("
-                + COLUMN_USERNAME + ", " + COLUMN_PASSWORD + ", " + COLUMN_AVATAR + ") VALUES('sampleUser', 'password123', null)";
+                    + COLUMN_USERNAME + ", " + COLUMN_PASSWORD + ", " + COLUMN_AVATAR + ") VALUES('sampleUser', 'password123', null)";
         db.execSQL(INSERT_SAMPLE_USER);
     }
-
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -96,39 +95,5 @@ public class DBHelper extends SQLiteOpenHelper {
         }
         return false;
     }
-
-    // Phương thức để cập nhật avatar
-    public void updateAvatar(String username, String avatarUri) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(COLUMN_AVATAR, avatarUri);
-        db.update(TABLE_USERS, values, COLUMN_USERNAME + "=?", new String[]{username});
-        db.close();
-    }
-
-    // Phương thức để lấy avatar hiện tại
-    public String getAvatar(String username) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_USERS, new String[]{COLUMN_AVATAR}, COLUMN_USERNAME + "=?",
-                new String[]{username}, null, null, null);
-
-        if (cursor != null && cursor.moveToFirst()) {
-            int avatarColumnIndex = cursor.getColumnIndex(COLUMN_AVATAR);
-            if (avatarColumnIndex != -1) {
-                String avatar = cursor.getString(avatarColumnIndex);
-                cursor.close();
-                return avatar;
-            } else {
-                cursor.close();
-                throw new IllegalArgumentException("Column not found: " + COLUMN_AVATAR);
-            }
-        }
-        if (cursor != null) {
-            cursor.close();
-        }
-        return null;
-    }
-
-
 
 }

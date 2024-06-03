@@ -3,9 +3,11 @@ package com.example.myapplication;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.provider.OpenableColumns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -23,11 +25,15 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-public class MainActivity extends AppCompatActivity {
-    private DBHelper dbHelper;
-    private static final int PICK_IMAGE_REQUEST = 1;
-    private static final int STORAGE_PERMISSION_CODE = 101;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 
+public class MainActivity extends AppCompatActivity {
+    private static final int REQUEST_CODE_PICK_IMAGE = 1;
+    private static final int REQUEST_CODE_PERMISSION = 2;
+    private DBHelper dbHelper;
     private TextView currentName;
     private EditText newName;
     private EditText currentPassword;
@@ -36,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private Button btnChangePassword;
     private ImageView avatar;
     private Button btnUploadAvatar;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,11 +70,7 @@ public class MainActivity extends AppCompatActivity {
         String currentUsername = dbHelper.getCurrentUsername();
         if (currentUsername != null) {
             currentName.setText(currentUsername);
-            // Lấy và hiển thị avatar hiện tại
-            String avatarUri = dbHelper.getAvatar(currentUsername);
-            if (avatarUri != null) {
-                avatar.setImageURI(Uri.parse(avatarUri));
-            }
+
         }
 
         // Xử lý sự kiện khi nhấn nút Change Username
@@ -106,49 +109,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Xử lý sự kiện khi nhấn nút Upload Avatar
-        btnUploadAvatar.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE)
-                        != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, STORAGE_PERMISSION_CODE);
-                } else {
-                    openImagePicker();
-                }
-            }
-        });
 
     }
 
-    private void openImagePicker() {
-        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        startActivityForResult(intent, PICK_IMAGE_REQUEST);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
-            Uri imageUri = data.getData();
-            avatar.setImageURI(imageUri);
-            String currentUsername = dbHelper.getCurrentUsername();
-            if (currentUsername != null) {
-                dbHelper.updateAvatar(currentUsername, imageUri.toString());
-                Toast.makeText(this, "Avatar updated successfully", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == STORAGE_PERMISSION_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                openImagePicker();
-            } else {
-                Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
 }
