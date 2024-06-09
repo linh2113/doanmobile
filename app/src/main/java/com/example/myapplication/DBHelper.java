@@ -12,7 +12,6 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String TABLE_USERS = "users";
     public static final String COLUMN_USERNAME = "username";
     public static final String COLUMN_PASSWORD = "password";
-    public static final String COLUMN_AVATAR = "avatar"; // Thêm cột avatar
 
     public DBHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -22,13 +21,12 @@ public class DBHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         String CREATE_USERS_TABLE = "CREATE TABLE " + TABLE_USERS + "("
                 + COLUMN_USERNAME + " TEXT PRIMARY KEY,"
-                + COLUMN_PASSWORD + " TEXT,"
-                + COLUMN_AVATAR + " TEXT" + ")";
+                + COLUMN_PASSWORD + " TEXT)";
         db.execSQL(CREATE_USERS_TABLE);
 
         // Thêm dữ liệu mẫu
         String INSERT_SAMPLE_USER = "INSERT INTO " + TABLE_USERS + "("
-                    + COLUMN_USERNAME + ", " + COLUMN_PASSWORD + ", " + COLUMN_AVATAR + ") VALUES('sampleUser', 'password123', null)";
+                    + COLUMN_USERNAME + ", " + COLUMN_PASSWORD + ") VALUES('sampleUser', 'password123')";
         db.execSQL(INSERT_SAMPLE_USER);
     }
 
@@ -95,5 +93,7 @@ public class DBHelper extends SQLiteOpenHelper {
         }
         return false;
     }
+
+
 
 }

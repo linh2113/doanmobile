@@ -1,9 +1,12 @@
 package com.example.myapplication;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -27,12 +30,11 @@ import androidx.core.view.WindowInsetsCompat;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
 public class MainActivity extends AppCompatActivity {
-    private static final int REQUEST_CODE_PICK_IMAGE = 1;
-    private static final int REQUEST_CODE_PERMISSION = 2;
     private DBHelper dbHelper;
     private TextView currentName;
     private EditText newName;
@@ -40,10 +42,14 @@ public class MainActivity extends AppCompatActivity {
     private EditText newPassword;
     private Button btnChangeName;
     private Button btnChangePassword;
+    private String currentUsername;
     private ImageView avatar;
     private Button btnUploadAvatar;
-
-
+    private static final int PICK_IMAGE_REQUEST = 1;
+    private static final int STORAGE_PERMISSION_CODE = 2;
+    private SQLiteHelper sqliteHelper;
+    private static final String SHARED_PREFS = "sharedPrefs";
+    private static final String IMAGE_ID_KEY = "imageId";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
          btnUploadAvatar = findViewById(R.id.btnUploadAvatar);
 
         // Lấy và hiển thị username hiện tại
-        String currentUsername = dbHelper.getCurrentUsername();
+        currentUsername = dbHelper.getCurrentUsername();
         if (currentUsername != null) {
             currentName.setText(currentUsername);
 
@@ -79,7 +85,6 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String newUsername = newName.getText().toString().trim();
                 if (!newUsername.isEmpty()) {
-                    String currentUsername = dbHelper.getCurrentUsername();
                     dbHelper.updateUsername(currentUsername, newUsername);
                     currentName.setText(newUsername);
                     currentUsername = newUsername; // Cập nhật currentUsername
@@ -108,8 +113,77 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+        sqliteHelper = new SQLiteHelper(this);
 
+        btnUploadAvatar.setOnClickListener(v -> {
+            if (ContextCompat.checkSelfPermission(MainActivity.this,
+                    Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                pickImageFromGallery();
+            } else {
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, STORAGE_PERMISSION_CODE);
+            }
+        });
 
+        loadSavedImage();
+    }
+    private void loadSavedImage() {
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, Context.MODE_PRIVATE);
+        long imageId = sharedPreferences.getLong(IMAGE_ID_KEY, -1);
+        if (imageId != -1) {
+            Bitmap bitmap = sqliteHelper.getImage((int) imageId);
+            if (bitmap != null) {
+                avatar.setImageBitmap(bitmap);
+            } else {
+                Toast.makeText(MainActivity.this, "No Image Found", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private void pickImageFromGallery() {
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        startActivityForResult(intent, PICK_IMAGE_REQUEST);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == STORAGE_PERMISSION_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                pickImageFromGallery();
+            } else {
+                Toast.makeText(this, "Permission Denied", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            Uri imageUri = data.getData();
+            try {
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
+                avatar.setImageBitmap(bitmap);
+
+                long imageId = sqliteHelper.insertImage(bitmap);
+                if (imageId != -1) {
+                    Toast.makeText(this, "Image Uploaded Successfully", Toast.LENGTH_SHORT).show();
+                    saveImageIdToSharedPreferences(imageId);
+                } else {
+                    Toast.makeText(this, "Failed to Upload Image", Toast.LENGTH_SHORT).show();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void saveImageIdToSharedPreferences(long imageId) {
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putLong(IMAGE_ID_KEY, imageId);
+        editor.apply();
     }
 
 }
