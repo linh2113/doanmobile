@@ -15,7 +15,13 @@
         android:layout_margin="30dp"
         tools:context=".MainActivity">
 
-
+        <Button
+            android:id="@+id/btnRouter"
+            android:layout_marginBottom="16dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:text="Quay lại" />
 
         <ImageView
             android:id="@+id/avatar"
@@ -30,7 +36,7 @@
             android:id="@+id/btnUploadAvatar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/upload_avatar" />
+            android:text="Đổi ảnh đại diện" />
 
         <TextView
             android:id="@+id/textView"
@@ -38,7 +44,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:padding="8dp"
-            android:text="Username:"
+            android:text="Tên người dùng:"
             android:textSize="18sp" />
 
         <TextView
@@ -53,7 +59,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"
-            android:hint="new name"
+            android:hint="Tên mới"
             android:inputType="text" />
 
         <Button
@@ -61,7 +67,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Change Username" />
+            android:text="Đổi tên người dùng" />
 
         <TextView
             android:id="@+id/textView1"
@@ -69,7 +75,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:padding="8dp"
-            android:text="Change password:"
+            android:text="Đổi mật khẩu:"
             android:textSize="18sp" />
 
         <EditText
@@ -78,7 +84,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@id/btnChangeName"
             android:layout_marginBottom="16dp"
-            android:hint="Current Password"
+            android:hint="Mật khẩu cũ"
             android:inputType="textPassword" />
 
         <EditText
@@ -87,7 +93,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@id/currentPassword"
             android:layout_marginBottom="16dp"
-            android:hint="New Password"
+            android:hint="Mật khẩu mới"
             android:inputType="textPassword" />
 
         <Button
@@ -96,7 +102,9 @@
             android:layout_height="wrap_content"
             android:layout_below="@id/newPassword"
             android:layout_centerHorizontal="true"
-            android:text="Change Password" />
+            android:text="Đồi mật khẩu" />
+
+
 
 
     </LinearLayout>
