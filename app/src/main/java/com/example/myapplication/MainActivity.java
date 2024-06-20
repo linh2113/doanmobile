@@ -41,12 +41,13 @@ public class MainActivity extends AppCompatActivity {
     private EditText newName;
     private EditText currentPassword;
     private EditText newPassword;
+    private EditText confirmNewPassword;
     private Button btnChangeName;
     private Button btnChangePassword;
     private String currentUsername;
     private ImageView avatar;
     private Button btnUploadAvatar;
-    private Button btnRouter;
+    private ImageView btnRouter;
 
     //mã định danh độc lập cho việc yêu cầu người dùng
     private static final int PICK_IMAGE_REQUEST = 1;
@@ -97,6 +98,7 @@ public class MainActivity extends AppCompatActivity {
 
         currentPassword = findViewById(R.id.currentPassword);
         newPassword = findViewById(R.id.newPassword);
+        confirmNewPassword=findViewById(R.id.confirmNewPassword);
         btnChangePassword = findViewById(R.id.btnChangePassword);
 
         avatar = findViewById(R.id.avatar);
@@ -116,12 +118,17 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String newUsername = newName.getText().toString().trim();
                 if (!newUsername.isEmpty()) {
+                    if(newUsername.equals(currentUsername)){
+                        Toast.makeText(MainActivity.this, "Tên mới không được trùng với tên hiện tại", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
                     dbHelper.updateUsername(currentUsername, newUsername);
                     currentName.setText(newUsername);
                     currentUsername = newUsername; // Cập nhật currentUsername
-                    Toast.makeText(MainActivity.this, "Username updated successfully", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Đổi tên người dùng thành công", Toast.LENGTH_SHORT).show();
+                    newName.setText("");
                 } else {
-                    Toast.makeText(MainActivity.this, "New username cannot be empty", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Tên mới không được để trống", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -132,15 +139,27 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String currentPasswordText = currentPassword.getText().toString().trim();
                 String newPasswordText = newPassword.getText().toString().trim();
-                if (!currentPasswordText.isEmpty() && !newPasswordText.isEmpty()) {
+                String confirmNewPasswordText = confirmNewPassword.getText().toString().trim();
+                if (!currentPasswordText.isEmpty() && !newPasswordText.isEmpty() && !confirmNewPasswordText.isEmpty()) {
+                    if(currentPasswordText.equals(newPasswordText)){
+                        Toast.makeText(MainActivity.this, "Mật khẩu mới không được trùng với mật khẩu cũ", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    if (!newPasswordText.equals(confirmNewPasswordText)) {
+                        Toast.makeText(MainActivity.this, "Mật khẩu mới không khớp", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
                     if (dbHelper.checkCurrentPassword(currentUsername, currentPasswordText)) {
                         dbHelper.updatePassword(currentUsername, newPasswordText);
-                        Toast.makeText(MainActivity.this, "Password updated successfully", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "Đổi mật khẩu thành công", Toast.LENGTH_SHORT).show();
+                        currentPassword.setText("");
+                        newPassword.setText("");
+                        confirmNewPassword.setText("");
                     } else {
-                        Toast.makeText(MainActivity.this, "Current password is incorrect", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "Mật khẩu cũ không đúng", Toast.LENGTH_SHORT).show();
                     }
                 } else {
-                    Toast.makeText(MainActivity.this, "Passwords cannot be empty", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Các trường mật khẩu không được để trống", Toast.LENGTH_SHORT).show();
                 }
             }
         });
