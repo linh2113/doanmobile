@@ -68,28 +68,28 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
         btnRouter=findViewById(R.id.btnRouter);
-        btnRouter.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Tạo Intent để chuyển từ MainActivity sang MainActivity2
-                Intent intent = new Intent(MainActivity.this, MainActivity2.class);
-
-                // Lấy currentName
-                String currentNameText = currentName.getText().toString();
-                intent.putExtra("currentName", currentNameText);
-
-                // Lấy avatar
-                avatar.setDrawingCacheEnabled(true);
-                Bitmap bitmap = avatar.getDrawingCache();
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
-                byte[] byteArray = byteArrayOutputStream.toByteArray();
-                intent.putExtra("avatar", byteArray);
-
-                // Bắt đầu activity mới (MainActivity2)
-                startActivity(intent);
-            }
-        });
+//        btnRouter.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                // Tạo Intent để chuyển từ MainActivity sang MainActivity2
+//                Intent intent = new Intent(MainActivity.this, MainActivity2.class);
+//
+//                // Lấy currentName
+//                String currentNameText = currentName.getText().toString();
+//                intent.putExtra("currentName", currentNameText);
+//
+//                // Lấy avatar
+//                avatar.setDrawingCacheEnabled(true);
+//                Bitmap bitmap = avatar.getDrawingCache();
+//                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+//                bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+//                byte[] byteArray = byteArrayOutputStream.toByteArray();
+//                intent.putExtra("avatar", byteArray);
+//
+//                // Bắt đầu activity mới (MainActivity2)
+//                startActivity(intent);
+//            }
+//        });
 
 
 
@@ -107,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
         btnUploadAvatar = findViewById(R.id.btnUploadAvatar);
 
         // Lấy và hiển thị username hiện tại
-        currentUsername = dbHelper.getCurrentUsername();
+        currentUsername = dbHelper.getCurrentDisplayName();
         if (currentUsername != null) {
             currentName.setText(currentUsername);
 
@@ -124,7 +124,7 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(MainActivity.this, "Tên mới không được trùng với tên hiện tại", Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    dbHelper.updateUsername(currentUsername, newUsername);
+                    dbHelper.updateDisplayName(currentUsername, newUsername);
                     currentName.setText(newUsername);
                     currentUsername = newUsername; // Cập nhật currentUsername
                     Toast.makeText(MainActivity.this, "Đổi tên người dùng thành công", Toast.LENGTH_SHORT).show();
@@ -179,37 +179,44 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void changePassword(String oldPassword, String newPassword) {
-        Retrofit retrofit = RetrofitClient.getClient("https://script.google.com/macros/s/AKfycbxJpmPDl_ySg22T06AHwj62EuYM5Yz_S26j7efRJxliDl2S5klNX-vx1w6PHhhxG3VnfA/");
-        ApiService apiService = retrofit.create(ApiService.class);
+        String gmailAddress = dbHelper.getUserGmail();
+        String token = dbHelper.getUserToken();
 
-        Call<ChangePasswordResponse> call = apiService.changePassword(
-                "updatepw",
-                "tinyfox@gmail.com",
-                "b37e3a99c33e8b21f4cfe6175f91ad0ecf06d87b",
-                oldPassword,
-                newPassword
-        );
+        if (gmailAddress != null && token != null) {
+            Retrofit retrofit = RetrofitClient.getClient("https://script.google.com/macros/s/AKfycbxJpmPDl_ySg22T06AHwj62EuYM5Yz_S26j7efRJxliDl2S5klNX-vx1w6PHhhxG3VnfA/");
+            ApiService apiService = retrofit.create(ApiService.class);
 
-        call.enqueue(new Callback<ChangePasswordResponse>() {
-            @Override
-            public void onResponse(Call<ChangePasswordResponse> call, Response<ChangePasswordResponse> response) {
-                if (response.isSuccessful()) {
-                    ChangePasswordResponse changePasswordResponse = response.body();
-                    if (changePasswordResponse != null && changePasswordResponse.getStatus()) {
-                        Toast.makeText(MainActivity.this, "Password changed successfully", Toast.LENGTH_SHORT).show();
+            Call<ChangePasswordResponse> call = apiService.changePassword(
+                    "updatepw",
+                    gmailAddress,
+                    token,
+                    oldPassword,
+                    newPassword
+            );
+
+            call.enqueue(new Callback<ChangePasswordResponse>() {
+                @Override
+                public void onResponse(Call<ChangePasswordResponse> call, Response<ChangePasswordResponse> response) {
+                    if (response.isSuccessful()) {
+                        ChangePasswordResponse changePasswordResponse = response.body();
+                        if (changePasswordResponse != null && changePasswordResponse.getStatus()) {
+                            Toast.makeText(MainActivity.this, "Password changed successfully", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(MainActivity.this, "Failed to change password", Toast.LENGTH_SHORT).show();
+                        }
                     } else {
-                        Toast.makeText(MainActivity.this, "Failed to change password", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "Response not successful", Toast.LENGTH_SHORT).show();
                     }
-                } else {
-                    Toast.makeText(MainActivity.this, "Response not successful", Toast.LENGTH_SHORT).show();
                 }
-            }
 
-            @Override
-            public void onFailure(Call<ChangePasswordResponse> call, Throwable t) {
-                Toast.makeText(MainActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
+                @Override
+                public void onFailure(Call<ChangePasswordResponse> call, Throwable t) {
+                    Toast.makeText(MainActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
+        } else {
+            Toast.makeText(this, "User data not available", Toast.LENGTH_SHORT).show();
+        }
     }
 
     // Phương thức để tải ảnh đã lưu
