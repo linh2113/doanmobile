@@ -28,12 +28,20 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.myapplication.API.APIService;
+import com.example.myapplication.model.User;
+import com.google.gson.Gson;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
     private DBHelper dbHelper;
@@ -137,9 +145,11 @@ public class MainActivity extends AppCompatActivity {
         btnChangePassword.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 String currentPasswordText = currentPassword.getText().toString().trim();
                 String newPasswordText = newPassword.getText().toString().trim();
                 String confirmNewPasswordText = confirmNewPassword.getText().toString().trim();
+
                 if (!currentPasswordText.isEmpty() && !newPasswordText.isEmpty() && !confirmNewPasswordText.isEmpty()) {
                     if(currentPasswordText.equals(newPasswordText)){
                         Toast.makeText(MainActivity.this, "Mật khẩu mới không được trùng với mật khẩu cũ", Toast.LENGTH_SHORT).show();
@@ -149,15 +159,25 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(MainActivity.this, "Mật khẩu mới không khớp", Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    if (dbHelper.checkCurrentPassword(currentUsername, currentPasswordText)) {
-                        dbHelper.updatePassword(currentUsername, newPasswordText);
-                        Toast.makeText(MainActivity.this, "Đổi mật khẩu thành công", Toast.LENGTH_SHORT).show();
-                        currentPassword.setText("");
-                        newPassword.setText("");
-                        confirmNewPassword.setText("");
-                    } else {
-                        Toast.makeText(MainActivity.this, "Mật khẩu cũ không đúng", Toast.LENGTH_SHORT).show();
-                    }
+                    APIService.apiService.convertuser("zNiq9JniHDxXfJ6vviMpTvRoM6G_njDx91nojAJg6JfaZpQ2QJ1qzeB_PCLRcqXeVPrGKU95Oie8_dcYhkvZ5cLC-xsuj3jYOJmA1Yb3SEsKFZqtv3DaNYcMrmhZHmUMi80zadyHLKCJh4OHUK-FGAUhAHLuIij_FujABhu3lRZGDHRQo40F-rhUz_UBon5L0s9FJqLsNH0s1F_orzyMrmEVPczsAM6LXVNRBEL7IMvZEPLNYASpjJ0hSJz6SyiPKmXT8QEa8Fe8mzDTCqnGIg","Mg7DcDFymf8eRs11sY3j5MxI7YPL3rfOf")
+                                .enqueue(new Callback<User>() {
+                                @Override
+                                public void onResponse(Call<User> call, Response<User> response) {
+                                    Toast.makeText(MainActivity.this,"Call API sucess!!", Toast.LENGTH_SHORT).show();
+                                    User a = response.body();
+                                        if (a != null) {
+                                        String password = a.getPassword();
+                                        if(currentPasswordText.equals(password)){
+                                            UpdatePassword(a);
+                                        }
+                                    }
+                                }
+                                @Override
+                                public void onFailure(Call<User> call, Throwable t) {
+                                    Toast.makeText(MainActivity.this,"Call API failed", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+
                 } else {
                     Toast.makeText(MainActivity.this, "Các trường mật khẩu không được để trống", Toast.LENGTH_SHORT).show();
                 }
@@ -179,6 +199,20 @@ public class MainActivity extends AppCompatActivity {
         });
 
         loadSavedImage();
+    }
+
+    private void UpdatePassword(User user) {
+        APIService.apiService.updateUser(user).enqueue(new Callback<User>() {
+            @Override
+            public void onResponse(Call<User> call, Response<User> response) {
+
+            }
+
+            @Override
+            public void onFailure(Call<User> call, Throwable t) {
+
+            }
+        });
     }
 
     // Phương thức để tải ảnh đã lưu

@@ -4,6 +4,7 @@
     <!-- Thêm quyền truy cập vào thư viện ảnh -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
         android:allowBackup="true"
@@ -15,6 +16,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApplication"
         tools:targetApi="31">
+        <activity
+            android:name=".TestAPI"
+            android:exported="true" />
         <activity
             android:name=".MainActivity2"
             android:exported="false" />
