@@ -5,12 +5,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.provider.OpenableColumns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -19,7 +17,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -28,20 +25,17 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.example.myapplication.API.APIService;
-import com.example.myapplication.model.User;
-import com.google.gson.Gson;
+import com.example.myapplication.API.ApiService;
+import com.example.myapplication.API.RetrofitClient;
+import com.example.myapplication.model.ChangePasswordResponse;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import retrofit2.Retrofit;
 
 public class MainActivity extends AppCompatActivity {
     private DBHelper dbHelper;
@@ -159,30 +153,13 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(MainActivity.this, "Mật khẩu mới không khớp", Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    APIService.apiService.convertuser("zNiq9JniHDxXfJ6vviMpTvRoM6G_njDx91nojAJg6JfaZpQ2QJ1qzeB_PCLRcqXeVPrGKU95Oie8_dcYhkvZ5cLC-xsuj3jYOJmA1Yb3SEsKFZqtv3DaNYcMrmhZHmUMi80zadyHLKCJh4OHUK-FGAUhAHLuIij_FujABhu3lRZGDHRQo40F-rhUz_UBon5L0s9FJqLsNH0s1F_orzyMrmEVPczsAM6LXVNRBEL7IMvZEPLNYASpjJ0hSJz6SyiPKmXT8QEa8Fe8mzDTCqnGIg","Mg7DcDFymf8eRs11sY3j5MxI7YPL3rfOf")
-                                .enqueue(new Callback<User>() {
-                                @Override
-                                public void onResponse(Call<User> call, Response<User> response) {
-                                    Toast.makeText(MainActivity.this,"Call API sucess!!", Toast.LENGTH_SHORT).show();
-                                    User a = response.body();
-                                        if (a != null) {
-                                        String password = a.getPassword();
-                                        if(currentPasswordText.equals(password)){
-                                            UpdatePassword(a);
-                                        }
-                                    }
-                                }
-                                @Override
-                                public void onFailure(Call<User> call, Throwable t) {
-                                    Toast.makeText(MainActivity.this,"Call API failed", Toast.LENGTH_SHORT).show();
-                                }
-                            });
-
+                    changePassword(currentPasswordText, newPasswordText);
                 } else {
                     Toast.makeText(MainActivity.this, "Các trường mật khẩu không được để trống", Toast.LENGTH_SHORT).show();
                 }
             }
         });
+
         sqliteHelper = new SQLiteHelper(this);
 
         btnUploadAvatar.setOnClickListener(v -> {
@@ -201,16 +178,36 @@ public class MainActivity extends AppCompatActivity {
         loadSavedImage();
     }
 
-    private void UpdatePassword(User user) {
-        APIService.apiService.updateUser(user).enqueue(new Callback<User>() {
-            @Override
-            public void onResponse(Call<User> call, Response<User> response) {
+    private void changePassword(String oldPassword, String newPassword) {
+        Retrofit retrofit = RetrofitClient.getClient("https://script.google.com/macros/s/AKfycbxJpmPDl_ySg22T06AHwj62EuYM5Yz_S26j7efRJxliDl2S5klNX-vx1w6PHhhxG3VnfA/");
+        ApiService apiService = retrofit.create(ApiService.class);
 
+        Call<ChangePasswordResponse> call = apiService.changePassword(
+                "updatepw",
+                "tinyfox@gmail.com",
+                "b37e3a99c33e8b21f4cfe6175f91ad0ecf06d87b",
+                oldPassword,
+                newPassword
+        );
+
+        call.enqueue(new Callback<ChangePasswordResponse>() {
+            @Override
+            public void onResponse(Call<ChangePasswordResponse> call, Response<ChangePasswordResponse> response) {
+                if (response.isSuccessful()) {
+                    ChangePasswordResponse changePasswordResponse = response.body();
+                    if (changePasswordResponse != null && changePasswordResponse.getStatus()) {
+                        Toast.makeText(MainActivity.this, "Password changed successfully", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(MainActivity.this, "Failed to change password", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(MainActivity.this, "Response not successful", Toast.LENGTH_SHORT).show();
+                }
             }
 
             @Override
-            public void onFailure(Call<User> call, Throwable t) {
-
+            public void onFailure(Call<ChangePasswordResponse> call, Throwable t) {
+                Toast.makeText(MainActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
