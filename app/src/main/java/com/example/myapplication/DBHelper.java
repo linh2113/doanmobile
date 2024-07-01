@@ -77,7 +77,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public String getUserGmail() {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.query(TABLE_USERS, new String[]{COLUMN_GMAIL}, null, null, null, null, null);
-        if (cursor != null && cursor.moveToFirst()) {
+        if (cursor != null && cursor.moveToLast()) {
             int columnIndex = cursor.getColumnIndex(COLUMN_GMAIL);
             if (columnIndex != -1) {
                 String gmail = cursor.getString(columnIndex);
@@ -94,7 +94,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public String getUserToken() {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.query(TABLE_USERS, new String[]{COLUMN_TOKEN}, null, null, null, null, null);
-        if (cursor != null && cursor.moveToFirst()) {
+        if (cursor != null && cursor.moveToLast()) {
             int columnIndex = cursor.getColumnIndex(COLUMN_TOKEN);
             if (columnIndex != -1) {
                 String token = cursor.getString(columnIndex);
@@ -106,5 +106,28 @@ public class DBHelper extends SQLiteOpenHelper {
             cursor.close();
         }
         return null;
+    }
+
+    public void addUser(String displayName, String gmail, String token) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_DISPLAY_NAME, displayName);
+        values.put(COLUMN_GMAIL, gmail);
+        values.put(COLUMN_TOKEN, token);
+        db.insert(TABLE_USERS, null, values);
+        db.close();
+    }
+    public void saveToken(String gmail, String token) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_GMAIL, gmail);
+        values.put(COLUMN_TOKEN, token);
+        db.insert(TABLE_USERS, null, values);
+        db.close();
+    }
+    public void clearToken() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(TABLE_USERS, null, null);
+        db.close();
     }
 }
